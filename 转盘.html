@@ -328,7 +328,6 @@ let bgImageData = null;
 let bgImgElement = null; // 预加载的背景图 Image 对象
 let bgOpacity = 60;
 let bgBlur = 3;
-const DEFAULT_BG_PATH = './6e5b1cb38ece27fe82f3f7c2aa33a7d2.jpg';
 let spinning = false;
 let currentAngle = 0;
 let currentTheme = localStorage.getItem('wheel-theme') || 'light';
@@ -355,23 +354,6 @@ function saveData() {
   localStorage.setItem('wheel-history', JSON.stringify(history));
 }
 
-// 加载默认背景 JPG 为 data URL
-async function loadDefaultBg() {
-  try {
-    const resp = await fetch(DEFAULT_BG_PATH);
-    if (!resp.ok) throw new Error('fetch failed');
-    const blob = await resp.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (e) {
-    console.warn('无法加载默认背景图:', e.message);
-    return null;
-  }
-}
 
 function loadData() {
   const saved = localStorage.getItem('wheel-options');
@@ -546,18 +528,11 @@ document.getElementById('bgFileInput').addEventListener('change', function() {
   };
   reader.readAsDataURL(file);
 });
-document.getElementById('bgClearBtn').addEventListener('click', async () => {
+document.getElementById('bgClearBtn').addEventListener('click', () => {
   bgImageData = null;
   bgImgElement = null;
   localStorage.removeItem('wheel-bgCustom');
   document.getElementById('bgFileInput').value = '';
-  // 恢复默认背景
-  const defaultBg = await loadDefaultBg();
-  if (defaultBg) {
-    bgImageData = defaultBg;
-    bgImgElement = new Image();
-    bgImgElement.src = defaultBg;
-  }
   updateBgImage(); drawWheel(); saveData();
 });
 
@@ -707,18 +682,8 @@ document.getElementById('clearHistoryBtn').addEventListener('click', () => {
 });
 
 // ===== Init =====
-async function init() {
+function init() {
   loadData();
-  // 无背景图时加载默认 JPG
-  if (!bgImageData) {
-    const defaultBg = await loadDefaultBg();
-    if (defaultBg) {
-      bgImageData = defaultBg;
-      bgImgElement = new Image();
-      bgImgElement.src = defaultBg;
-      saveData();
-    }
-  }
   applyTheme();
   drawWheel();
   renderOptions();
